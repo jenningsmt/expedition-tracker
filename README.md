@@ -1,3 +1,29 @@
+# Galactic Six Points Expedition
+
+A long-haul exploration voyage across the Milky Way — and the toolkit that records it.
+
+---
+
+## The Sandbox
+
+Elite Dangerous is a space-flight simulator built around a full-scale, 1:1 recreation of our Milky Way galaxy: roughly 400 billion star systems, the overwhelming majority of which no human player has ever visited. One of the game's core pursuits is exploration — flying out into uncharted space, scanning the stars, planets, moons, and lifeforms you find, and being the first commander to put your name on a new discovery.
+
+The 6 Compass Points Expedition is one such voyage. It's organized around six destination systems — one for each direction a starship can travel in the galaxy: North, South, East, West, Zenith (up), and Nadir (down).
+
+## Why explorers do this
+
+Exploration in Elite Dangerous is part science expedition, part personal odyssey. The science is real: the game is a 1:1 simulation of the Milky Way, so a commander dropping into an untouched system is the first to chart its stars, measure the mass and chemistry of its worlds, and document the lifeforms found on them — and your name stays attached to every body you discover, a permanent entry in humanity's shared map of the galaxy. The odyssey is the rest of it — weeks alone in the dark, tens of thousands of light-years from another soul, navigating star to star for the singular thrill of arriving somewhere no one has ever been, and cataloguing the strange and beautiful things that turn up out there: ringed Earth-like worlds, moons glowing with volcanism from the giant they orbit, gas giants tinged green with life.
+
+## Scope
+
+This is not a quick trip. An expedition like this likely means weeks or months of game time, the survey of thousands of star systems, and several hundreds of thousands of light-years of travel crisscrossing the galaxy to venture into the farthest reaches — far enough that a single navigational mistake can strand a ship with no help for hundreds of jumps in any direction.
+
+## What's in this repository
+
+This toolkit watches the game's own session journals as the expedition unfolds, extracts the discoveries, jumps, distances, and earnings into a local database, and produces a summary for each leg of the journey — plus a running tally of the rare and notable finds along the way. (See the sections below for setup and usage.)
+
+---
+
 # Elite Dangerous Expedition Tracker — "6 Compass Points"
 
 A real-time journal watcher for the **6 Compass Points** expedition.  
