@@ -8,7 +8,7 @@ A long-haul exploration voyage across the Milky Way — and the toolkit that rec
 
 Elite Dangerous is a space-flight simulator built around a full-scale, 1:1 recreation of our Milky Way galaxy: roughly 400 billion star systems, the overwhelming majority of which no human player has ever visited. One of the game's core pursuits is exploration — flying out into uncharted space, scanning the stars, planets, moons, and lifeforms you find, and being the first commander to put your name on a new discovery.
 
-The 6 Compass Points Expedition is one such voyage. It's organized around six destination systems — one for each direction a starship can travel in the galaxy: North, South, East, West, Zenith (up), and Nadir (down).
+The Galactic Six Points Expedition is one such voyage. It's organized around six destination systems — one for each direction a starship can travel in the galaxy: North, South, East, West, Zenith (up), and Nadir (down).
 
 ## Why explorers do this
 
@@ -24,9 +24,9 @@ This toolkit watches the game's own session journals as the expedition unfolds, 
 
 ---
 
-# Elite Dangerous Expedition Tracker — "6 Compass Points"
+# Elite Dangerous Expedition Tracker — "Galactic Six Points"
 
-A real-time journal watcher for the **6 Compass Points** expedition.  
+A real-time journal watcher for the **Galactic Six Points** expedition.  
 Reads ED journal files as you play, stores everything in a local SQLite database,
 and generates per-leg Excel + CSV summaries automatically when you reach a waypoint.
 
@@ -112,7 +112,7 @@ DB is cleanly closed and no partial writes are left.
 | Trigger | Effect |
 |---|---|
 | Expedition start timestamp | Leg 1 opens automatically |
-| FSDJump to an **unvisited** compass-point waypoint | Current leg closes (named after that waypoint), next leg opens |
+| FSDJump to an **unvisited** Galactic Six Points waypoint | Current leg closes (named after that waypoint), next leg opens |
 | FSDJump to `Parrot's Head Sector EL-Y d70` | Final leg closes, expedition marked **complete** |
 | Manual "Close current leg & export now" | Closes active leg with an ordinal name, opens the next |
 
@@ -120,7 +120,7 @@ DB is cleanly closed and no partial writes are left.
 **Revisiting** a waypoint you've already reached does nothing.  
 **Carrier jumps** are tracked separately and never trigger a leg change.
 
-### The 6 compass points
+### The Galactic Six Points
 
 | Label | System |
 |---|---|
