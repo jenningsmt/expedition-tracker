@@ -123,13 +123,19 @@ DB is cleanly closed and no partial writes are left.
 | Trigger | Effect |
 |---|---|
 | Expedition start timestamp | Leg 1 opens automatically |
-| FSDJump to an **unvisited** expedition waypoint | Current leg closes (named after that waypoint), next leg opens |
+| FSDJump **away from** an unvisited waypoint | Current leg closes (named after that waypoint), next leg opens |
 | FSDJump to `expedition_end_system` | Final leg closes, expedition marked **complete** |
 | Manual "Close current leg & export now" | Closes active leg with an ordinal name, opens the next |
 
 **Waypoints are unordered** — visit them in any sequence.  
 **Revisiting** a waypoint you've already reached does nothing.  
 **Carrier jumps** are tracked separately and never trigger a leg change.
+
+> **Why the departure trigger?** Leg closure fires when you jump *away* from a
+> waypoint, not when you arrive. This ensures that any cartographic or
+> exobiology sales made while docked at the waypoint station are attributed to
+> the leg that earned them — the one that ends there — rather than the new leg
+> that begins with your departure jump.
 
 ---
 
