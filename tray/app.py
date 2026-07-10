@@ -9,6 +9,8 @@ the engine objects which handle their own locking.
 from __future__ import annotations
 
 import logging
+import subprocess
+import sys
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -96,10 +98,12 @@ class TrackerTray:
             icon=icon_img,
             title="ED Expedition Tracker",
             menu=Menu(
-                Item("Status",          self._show_status),
+                Item("Status",                self._show_status),
                 Item("Close leg & export now", self._manual_close),
                 Menu.SEPARATOR,
-                Item("Stop & exit",     self._stop_and_exit),
+                Item("Configure expedition…", self._open_config),
+                Menu.SEPARATOR,
+                Item("Stop & exit",           self._stop_and_exit),
             ),
         )
         log.info("Starting tray icon.")
@@ -141,6 +145,10 @@ class TrackerTray:
             except Exception:
                 pass
         self._update_tooltip()
+
+    def _open_config(self, icon, item) -> None:
+        config_script = Path(__file__).parent.parent / "ui" / "config_window.py"
+        subprocess.Popen([sys.executable, str(config_script)])
 
     def _stop_and_exit(self, icon, item) -> None:
         log.info("Stop & exit requested.")
