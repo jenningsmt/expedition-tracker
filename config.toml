@@ -1,4 +1,4 @@
-# Elite Dangerous Expedition Tracker — "6 Compass Points"
+# Elite Dangerous Expedition Tracker — "Galactic Six Points"
 # Edit paths to match your machine, then launch tracker.pyw.
 
 # ── Journal source ─────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ expedition_start_system = "Dryaa Phoe HI-Z d1-0"
 # Arriving here (case-insensitive) closes the final leg and marks the run done.
 expedition_end_system = "Parrot's Head Sector EL-Y d70"
 
-# ── Compass-point waypoints ────────────────────────────────────────────────────
+# ── Galactic Six Points waypoints ─────────────────────────────────────────────
 # Order does NOT matter — waypoints are visited in any sequence.
 # Arriving at an unvisited waypoint auto-closes the current leg and names it.
 # System strings are matched case-insensitively against FSDJump.StarSystem.
