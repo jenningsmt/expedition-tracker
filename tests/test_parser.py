@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.conftest import make_jump, make_scan, CUTOFF
+from tests.conftest import make_jump, make_loadgame, make_scan, CUTOFF
 
 
 # ── Cutoff filter ──────────────────────────────────────────────────────────────
@@ -226,6 +226,71 @@ def test_sell_organic_data(parser, db):
     assert sale is not None
     assert len(items) == 1
     assert items[0]["value"] == 3_819_975
+
+
+# ── Commander filtering ────────────────────────────────────────────────────────
+
+def test_loadgame_sets_session_commander(parser):
+    parser.process_line(make_loadgame(commander="ExampleCMDR"))
+    assert parser._session_commander == "examplecmdr"
+
+
+def test_events_before_any_loadgame_pass_through(parser, db):
+    """No LoadGame seen yet → _session_commander is None → events are not gated."""
+    assert parser._session_commander is None
+    assert parser.process_line(make_jump(ts="2026-06-03T01:00:00Z", star_system="Pre-LG"))
+    with db._lock:
+        n = db._exec("SELECT COUNT(*) FROM jumps").fetchone()[0]
+    assert n == 1
+
+
+def test_correct_commander_events_processed(parser, db):
+    parser.process_line(make_loadgame(commander="ExampleCMDR"))
+    assert parser.process_line(make_jump(ts="2026-06-03T01:01:00Z", star_system="My Jump"))
+    with db._lock:
+        n = db._exec("SELECT COUNT(*) FROM jumps").fetchone()[0]
+    assert n == 1
+
+
+def test_wrong_commander_events_dropped(parser, db):
+    parser.process_line(make_loadgame(commander="OtherCMDR"))
+    result = parser.process_line(make_jump(ts="2026-06-03T01:02:00Z", star_system="Alt Jump"))
+    assert not result
+    with db._lock:
+        n = db._exec("SELECT COUNT(*) FROM jumps").fetchone()[0]
+    assert n == 0
+
+
+def test_commander_matching_is_case_insensitive(parser, db):
+    """Config commander stored as lowercase; journal may use any capitalisation."""
+    parser.process_line(make_loadgame(commander="EXAMPLECMDR"))
+    assert parser.process_line(make_jump(ts="2026-06-03T01:03:00Z", star_system="Case Jump"))
+    with db._lock:
+        n = db._exec("SELECT COUNT(*) FROM jumps").fetchone()[0]
+    assert n == 1
+
+
+def test_commander_switch_mid_session(parser, db):
+    """
+    First session: correct commander → jumps recorded.
+    Second session (different commander): jumps dropped.
+    Third session: correct commander again → jumps recorded.
+    """
+    parser.process_line(make_loadgame(ts="2026-06-03T01:00:00Z", commander="ExampleCMDR"))
+    parser.process_line(make_jump(ts="2026-06-03T01:05:00Z", star_system="Jump A"))
+
+    parser.process_line(make_loadgame(ts="2026-06-03T02:00:00Z", commander="AltCMDR"))
+    parser.process_line(make_jump(ts="2026-06-03T02:05:00Z", star_system="Jump B"))
+
+    parser.process_line(make_loadgame(ts="2026-06-03T03:00:00Z", commander="ExampleCMDR"))
+    parser.process_line(make_jump(ts="2026-06-03T03:05:00Z", star_system="Jump C"))
+
+    with db._lock:
+        systems = [
+            r[0] for r in db._exec("SELECT to_system FROM jumps ORDER BY ts").fetchall()
+        ]
+    assert systems == ["Jump A", "Jump C"]
+    assert "Jump B" not in systems
 
 
 # ── Change 1: Terraformable vs body-class separation ─────────────────────────

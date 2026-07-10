@@ -55,13 +55,19 @@ class EventParser:
         self.db = db
         self.legs = legs
         self._cutoff: datetime = cfg["expedition_start_dt"]
-        self._commander: str = cfg["commander"]
+        self._commander: str = cfg["commander"].lower().strip()
         self._on_leg_close = on_leg_close  # callback for tray/CLI notifications
 
         # Current system is maintained across calls so we can fill from_system
         # on FSDJump events (the event itself only carries the destination).
         # Restored from the DB on startup via restore_state().
         self._current_system: str | None = None
+
+        # Commander seen in the most recent LoadGame event.  None until the first
+        # LoadGame is processed (e.g. mid-file Continued journals).  Events from
+        # a different commander are dropped so a second account sharing the same
+        # journal directory cannot pollute the expedition data.
+        self._session_commander: str | None = None
 
     def restore_state(self) -> None:
         """Restore in-memory state from the DB after a restart."""
@@ -108,6 +114,18 @@ class EventParser:
         if not self.db.insert_event(dedupe_key, ts_str, event_type, line):
             return False  # Already processed
 
+        # ── Commander gate ─────────────────────────────────────────────────────
+        # LoadGame always passes so we can update _session_commander.
+        # All other events are dropped when the active session belongs to a
+        # different commander (second account in the same journal folder).
+        if event_type != "LoadGame" and self._session_commander is not None:
+            if self._session_commander != self._commander:
+                log.debug(
+                    "Skipping %s: session commander %r != configured %r",
+                    event_type, self._session_commander, self._commander,
+                )
+                return False
+
         # ── Dispatch ───────────────────────────────────────────────────────────
         handler = getattr(self, f"_on_{event_type}", None)
         if handler:
@@ -134,6 +152,10 @@ class EventParser:
                 self._on_leg_close(closed_id)
 
     # ── Event handlers ─────────────────────────────────────────────────────────
+
+    def _on_LoadGame(self, ev: dict, ts: str) -> None:
+        self._session_commander = ev.get("Commander", "").lower().strip()
+        log.debug("Session commander set to %r", self._session_commander)
 
     def _on_FSDJump(self, ev: dict, ts: str) -> None:
         to_sys = ev.get("StarSystem", "")

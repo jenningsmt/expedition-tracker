@@ -80,6 +80,20 @@ def parser(db, legs, cfg):
 
 # ── Journal line helpers ───────────────────────────────────────────────────────
 
+def make_loadgame(
+    ts: str = "2026-06-03T00:30:00Z",
+    commander: str = "ExampleCMDR",
+) -> str:
+    return json.dumps({
+        "timestamp": ts,
+        "event": "LoadGame",
+        "Commander": commander,
+        "FID": "F0000000",
+        "Horizons": True,
+        "Odyssey": True,
+    })
+
+
 def make_jump(
     ts: str = "2026-06-03T01:00:00Z",
     star_system: str = "Alpha Centauri",
