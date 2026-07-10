@@ -126,7 +126,7 @@ class TestInvariants:
     # ── Rare-finds invariants ──────────────────────────────────────────────────
 
     def test_geo_signal_counts_at_most_3(self, expedition):
-        """Geological signal counts in the data are only ever 2 or 3."""
+        """Geological signal counts are never greater than 3 (ED game constraint)."""
         db, _, _ = expedition
         with db._lock:
             row = db._exec(
@@ -135,106 +135,6 @@ class TestInvariants:
             ).fetchone()
         max_val = row[0] if row and row[0] is not None else 0
         assert max_val <= 3, f"Unexpected geo signal count > 3: {max_val}"
-
-    def test_jumponium_rule_all_bodies_ge_66(self, expedition):
-        """Jumponium rule (geo≥3 + volcanic + ≥1 jumponium) matches >= 66 bodies
-        across ALL scanned bodies (flag_only_first_discoveries=False)."""
-        _, stats, _ = expedition
-        count = stats.get("rare_finds_jumponium_all", 0)
-        assert count >= 66, (
-            f"Expected >= 66 jumponium matches across all bodies, got {count}"
-        )
-
-    def test_habitable_moon_includes_aidow(self, expedition):
-        """Aidow NM-L c21-0 1 a (Water world) must appear as a habitable_moon match."""
-        db, _, _ = expedition
-        with db._lock:
-            row = db._exec(
-                "SELECT * FROM rare_finds "
-                "WHERE system='Aidow NM-L c21-0' "
-                "AND body_name='Aidow NM-L c21-0 1 a' "
-                "AND matched_rules LIKE '%habitable_moon%'"
-            ).fetchone()
-        assert row is not None, (
-            "Aidow NM-L c21-0 1 a not found in rare_finds with habitable_moon rule. "
-            "Check that the rarity pass ran (call _ingest() which now calls run_rarity_pass())."
-        )
-
-    def test_blaed_jumponium_5_materials(self, expedition):
-        """Blaed AV-V d3-3 5 a is a first-discovery jumponium target with 5 materials."""
-        import json as _json
-        db, _, _ = expedition
-        with db._lock:
-            row = db._exec(
-                "SELECT trigger_details FROM rare_finds "
-                "WHERE body_name='Blaed AV-V d3-3 5 a' "
-                "AND matched_rules LIKE '%jumponium%'"
-            ).fetchone()
-        assert row is not None, "Blaed AV-V d3-3 5 a not found as jumponium target in rare_finds"
-        details = _json.loads(row[0])
-        detail_str = details.get("jumponium", "")
-        assert "5" in detail_str, f"Expected 5 jumponium materials, got: {detail_str}"
-        for mat in ["arsenic", "carbon", "germanium", "niobium", "yttrium"]:
-            assert mat in detail_str.lower(), (
-                f"Expected {mat} in jumponium details, got: {detail_str}"
-            )
-
-    def test_nsp_count_is_zero(self, expedition):
-        """
-        ⚠️  UNVALIDATED RULE — zero NSP/spaceborne events in current journals.
-        Assert no false positives against the existing data.
-        TODO: validate this rule on the next live NSP encounter.
-        """
-        _, stats, _ = expedition
-        count = stats.get("rare_finds_nsp", 0)
-        assert count == 0, (
-            f"NSP alert rule produced {count} matches on current journals — "
-            "expected 0 (no NSP events in dataset). Check nsp_mundane_signal_types config."
-        )
-
-    def test_ringed_life_bearing_gg_counts(self, expedition):
-        """4 water-based-life + 4 ammonia-based-life gas giants have rings (all scanned bodies)."""
-        import json as _json
-        db, _, _ = expedition
-        # Count from raw scan events — includes bodies regardless of WasDiscovered flag.
-        with db._lock:
-            rows = db._exec(
-                "SELECT raw_json FROM events_raw WHERE event='Scan'"
-            ).fetchall()
-        ringed_water = 0
-        ringed_ammonia = 0
-        for (rj,) in rows:
-            try:
-                ev = _json.loads(rj)
-            except Exception:
-                continue
-            pc = ev.get("PlanetClass", "")
-            if ev.get("Rings") and pc in (
-                "Gas giant with water based life",
-                "Gas giant with ammonia based life",
-            ):
-                if "water" in pc.lower():
-                    ringed_water += 1
-                else:
-                    ringed_ammonia += 1
-        assert ringed_water  >= 4, f"Expected >= 4 ringed water-life GGs, got {ringed_water}"
-        assert ringed_ammonia >= 4, f"Expected >= 4 ringed ammonia-life GGs, got {ringed_ammonia}"
-
-    def test_anchor_126_jumps_to_phloinn(self, expedition):
-        """
-        From the expedition cutoff (2026-06-03T00:39:41Z) to the first arrival
-        at Phloinn HC-J d10-1 (2026-06-09) must be exactly 126 FSDJumps.
-        This is a fixed historical anchor that verifies the cutoff filter
-        correctly excludes the ~21-jump pre-expedition shakedown loop.
-        """
-        db, _, _ = expedition
-        n = db.count_jumps_to_first_arrival("Phloinn HC-J d10-1")
-        if n == -1:
-            pytest.skip("Phloinn HC-J d10-1 not yet reached in current journals.")
-        assert n == 126, (
-            f"Expected 126 jumps to Phloinn, got {n}. "
-            "Check that the expedition_start_timestamp cutoff filter is working."
-        )
 
 
 # ── Baseline comparison tests ──────────────────────────────────────────────────

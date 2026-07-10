@@ -1,9 +1,10 @@
-# Elite Dangerous Expedition Tracker — "Galactic Six Points"
-# Edit paths to match your machine, then launch tracker.pyw.
+# Elite Dangerous Expedition Tracker
+# Edit this file to define your expedition, then launch tracker.pyw.
 
 # ── Journal source ─────────────────────────────────────────────────────────────
 # Default is the standard ED Saved Games location on Windows.
-journal_dir = 'C:\Users\jenni\Saved Games\Frontier Developments\Elite Dangerous'
+# Change this if your journals are in a non-standard location.
+journal_dir = 'C:\Users\YourName\Saved Games\Frontier Developments\Elite Dangerous'
 
 # ── Output & database ──────────────────────────────────────────────────────────
 # Paths relative to the script root, or use absolute paths.
@@ -11,54 +12,52 @@ output_dir = "output"
 db_path    = "tracker.db"
 
 # ── Commander ──────────────────────────────────────────────────────────────────
-commander = "AristonX"
+commander = "YourCommanderName"
 
-# ── Expedition anchor ──────────────────────────────────────────────────────────
-# The authoritative departure event.  Every journal event with an earlier
-# timestamp is silently discarded — this excludes the 1–2 June shakedown loop
-# (~21 short hops around the home boxel) AND any pre-expedition activity.
-expedition_start_timestamp = "2026-06-03T00:39:41Z"
+# ── Expedition definition ──────────────────────────────────────────────────────
+# Set expedition_start_timestamp to the UTC timestamp of your first departure
+# jump.  Every journal event before this time is silently ignored — use it to
+# exclude pre-expedition shakedown flights or prior sessions in the same
+# journal directory.
+#
+# Find the exact timestamp: open your most recent journal file and look for the
+# first FSDJump event after you departed for the expedition.
+# Format: "YYYY-MM-DDTHH:MM:SSZ"
+expedition_start_timestamp = "2025-01-01T00:00:00Z"
 
-# Documentation only — NOT used for auto-detection logic.
-expedition_start_system = "Dryaa Phoe HI-Z d1-0"
+# The system you depart from.  Documentation only — not used for tracking logic.
+expedition_start_system = "Sol"
 
-# Arriving here (case-insensitive) closes the final leg and marks the run done.
-expedition_end_system = "Parrot's Head Sector EL-Y d70"
+# Arriving at this system (case-insensitive) closes the final leg and marks
+# the expedition complete.  Set this to your planned final destination.
+expedition_end_system = "Sagittarius A*"
 
-# ── Galactic Six Points waypoints ─────────────────────────────────────────────
-# Order does NOT matter — waypoints are visited in any sequence.
-# Arriving at an unvisited waypoint auto-closes the current leg and names it.
-# System strings are matched case-insensitively against FSDJump.StarSystem.
-# Confirm the "East" string against the in-game galaxy map before the run.
-
-[[waypoints]]
-label  = "Nadir"
-system = "HD 6428"
-
-[[waypoints]]
-label  = "Zenith"
-system = "HIP 58832"
-
-[[waypoints]]
-label  = "West"
-system = "Sphiesi HX-L d7-0"
-
-[[waypoints]]
-label  = "East"
-system = "Ood Fleau ZJ-I d9-0"   # confirmed 2026-06-17
+# ── Waypoints ──────────────────────────────────────────────────────────────────
+# Define one [[waypoints]] block per destination.  Order does NOT matter —
+# waypoints are visited in any sequence.
+#
+# When you FSD-jump AWAY from an unvisited waypoint system, the tracker
+# automatically closes the current leg (naming it after that waypoint's label)
+# and opens the next one.  Revisiting a waypoint you've already been to has
+# no effect.
+#
+# System names are matched case-insensitively against FSDJump.StarSystem.
+# Confirm the exact in-game system name before adding it here.
 
 [[waypoints]]
-label  = "South"
-system = "Lyed YJ-I d9-0"
+label  = "Waypoint 1"
+system = "Beagle Point"
 
 [[waypoints]]
-label  = "North"
-system = "Oevasy SG-Y d0"
+label  = "Waypoint 2"
+system = "Colonia"
+
+# Add more [[waypoints]] blocks as needed for your expedition route.
 
 # ── Rare / notable first-discovery detector ────────────────────────────────────
 [rarity]
 # If true (default), only evaluate bodies where WasDiscovered == false.
-# Set to false to evaluate all scanned bodies (flags still record the values).
+# Set to false to evaluate all scanned bodies regardless of prior discovery.
 flag_only_first_discoveries = true
 
 # Per-rule enable/disable switches
@@ -68,15 +67,15 @@ rule_life_bearing_gg   = true   # gas giants with water/ammonia life
 rule_very_small        = true   # radius below threshold
 rule_tidal_moon        = true   # volcanic moon orbiting a planet
 rule_jumponium         = true   # geo≥3 + volcanic + ≥1 jumponium material
-rule_exotic_star       = true   # neutron / black-hole / white-dwarf / WR / HerbigAeBe
-rule_high_gravity      = true   # landable with surface gravity > threshold
+rule_exotic_star       = true   # neutron / black hole / white dwarf / WR / HerbigAeBe
+rule_high_gravity      = true   # landable body with surface gravity > threshold
 rule_fast_rotator      = true   # rotation period below threshold (non-tidal-locked)
-rule_ggg_candidate     = true   # gas-giant GGG heuristic (VERIFY VISUALLY — false positives expected)
-rule_nsp_alert         = true   # Notable Stellar Phenomena system alert (UNVALIDATED — no live data yet)
+rule_ggg_candidate     = true   # gas-giant GGG heuristic (verify visually — false positives expected)
+rule_nsp_alert         = true   # Notable Stellar Phenomena system alert
 
 # Thresholds
 very_small_radius_m   = 300000  # 300 km in metres
-high_gravity_g        = 3.0     # surface gravity in g (journal field is m/s²)
+high_gravity_g        = 3.0     # surface gravity threshold in g
 fast_rotator_hours    = 3.0     # rotation period threshold in hours
 geo_signal_threshold  = 3       # minimum geological signal count for the jumponium rule
 
@@ -87,7 +86,6 @@ jumponium_materials = [
 ]
 
 # Exotic star types — exact match against journal StarType field.
-# White dwarfs (DA, DB, DC, …) and Wolf-Rayet (W, WN, WNC, WC, WO) use the full code.
 exotic_star_types = [
     "N", "H",
     "DA", "DAB", "DAO", "DAZ", "DAV",
@@ -96,8 +94,6 @@ exotic_star_types = [
 ]
 
 # GGG heuristic: PlanetClass values flagged as potential Green Gas Giant candidates.
-# These are common GGG classes observed by the community; the journal has no "green" field
-# so this is best-effort only.  Water-based-life / ammonia-based-life GGs are rule 3.
 ggg_planet_classes = [
     "Sudarsky class I gas giant",
     "Sudarsky class II gas giant",
@@ -110,7 +106,6 @@ ggg_planet_classes = [
 
 # NSP rule: FSSSignalDiscovered signal types to treat as mundane (not flagged).
 # Anything NOT on this list triggers the NSP alert.
-# Tune once you see a real NSP entry in the journals.
 nsp_mundane_signal_types = [
     "Fleet Carrier",
     "Station",

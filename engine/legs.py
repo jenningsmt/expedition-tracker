@@ -2,11 +2,11 @@
 Leg state machine.
 
 A "leg" is the stretch of travel between two waypoints (or from expedition
-start to the first waypoint, or from the last waypoint to Parrot's Head).
+start to the first waypoint, or from the last waypoint to the end system).
 
 Auto-close rules
 ----------------
-* FSDJump AWAY FROM an unvisited compass-point waypoint (on_depart)
+* FSDJump AWAY FROM an unvisited expedition waypoint (on_depart)
   → close current leg (name = waypoint label), open the next leg.
   Triggered on departure so that any cartographic / exo-bio sales made
   aboard the carrier in the waypoint system are included in the closing leg.
@@ -101,7 +101,7 @@ class LegManager:
         """
         Called when the commander FSDJumps AWAY from a system.
 
-        If from_system is an unvisited compass-point waypoint, close the current
+        If from_system is an unvisited expedition waypoint, close the current
         leg (naming it after that waypoint) and open the next one.  This ensures
         that any cartographic / exo-bio sales transacted in the waypoint system
         are attributed to the leg that ends there, not the leg that follows.

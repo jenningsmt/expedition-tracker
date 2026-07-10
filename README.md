@@ -1,34 +1,13 @@
-# Galactic Six Points Expedition
+# Elite Dangerous Expedition Tracker
 
-A long-haul exploration voyage across the Milky Way — and the toolkit that records it.
+A configurable real-time journal watcher for multi-leg exploration expeditions
+in Elite Dangerous.
 
----
-
-## The Sandbox
-
-Elite Dangerous is a space-flight simulator built around a full-scale, 1:1 recreation of our Milky Way galaxy: roughly 400 billion star systems, the overwhelming majority of which no human player has ever visited. One of the game's core pursuits is exploration — flying out into uncharted space, scanning the stars, planets, moons, and lifeforms you find, and being the first commander to put your name on a new discovery.
-
-The Galactic Six Points Expedition is one such voyage. It's organized around six destination systems — one for each direction a starship can travel in the galaxy: North, South, East, West, Zenith (up), and Nadir (down).
-
-## Why explorers do this
-
-Exploration in Elite Dangerous is part science expedition, part personal odyssey. The science is real: the game is a 1:1 simulation of the Milky Way, so a commander dropping into an untouched system is the first to chart its stars, measure the mass and chemistry of its worlds, and document the lifeforms found on them — and your name stays attached to every body you discover, a permanent entry in humanity's shared map of the galaxy. The odyssey is the rest of it — weeks alone in the dark, tens of thousands of light-years from another soul, navigating star to star for the singular thrill of arriving somewhere no one has ever been, and cataloguing the strange and beautiful things that turn up out there: ringed Earth-like worlds, moons glowing with volcanism from the giant they orbit, gas giants tinged green with life.
-
-## Scope
-
-This is not a quick trip. An expedition like this likely means weeks or months of game time, the survey of thousands of star systems, and several hundreds of thousands of light-years of travel crisscrossing the galaxy to venture into the farthest reaches — far enough that a single navigational mistake can strand a ship with no help for hundreds of jumps in any direction.
-
-## What's in this repository
-
-This toolkit watches the game's own session journals as the expedition unfolds, extracts the discoveries, jumps, distances, and earnings into a local database, and produces a summary for each leg of the journey — plus a running tally of the rare and notable finds along the way. (See the sections below for setup and usage.)
-
----
-
-# Elite Dangerous Expedition Tracker — "Galactic Six Points"
-
-A real-time journal watcher for the **Galactic Six Points** expedition.  
-Reads ED journal files as you play, stores everything in a local SQLite database,
-and generates per-leg Excel + CSV summaries automatically when you reach a waypoint.
+Define your planned route — start system, waypoints, and final destination — in
+`config.toml`. The tracker reads your game's session journals as you play,
+records every jump, scan, and discovery into a local SQLite database, and
+generates per-leg Excel + CSV summaries automatically when you reach each
+waypoint.
 
 ---
 
@@ -60,8 +39,39 @@ and generates per-leg Excel + CSV summaries automatically when you reach a waypo
    pip install -r requirements.txt
    ```
 
-4. Edit `config.toml` if your ED journals are not in the default Saved Games path,
-   or if you want exports somewhere specific.
+4. Edit `config.toml` to define your expedition (see below).
+
+---
+
+## Configure your expedition
+
+Open `config.toml` and fill in five things:
+
+**`journal_dir`** — path to your ED Saved Games folder. The default is the
+standard Windows location; change it if your installation is non-standard.
+
+**`commander`** — your in-game commander name, used to filter journal events.
+
+**`expedition_start_timestamp`** — UTC timestamp of your first expedition jump.
+Every event before this time is ignored, which excludes any pre-departure
+shakedown flights recorded in the same journal directory. Find it by opening
+your most recent journal file and noting the timestamp of your first `FSDJump`.
+
+**`expedition_end_system`** — the system where the expedition ends. Arriving
+here closes the final leg and marks the run complete.
+
+**`[[waypoints]]`** — one block per destination. Add as many as your route
+requires. System names are matched case-insensitively. Example:
+
+```toml
+[[waypoints]]
+label  = "Outpost Alpha"
+system = "Beagle Point"
+
+[[waypoints]]
+label  = "Outpost Beta"
+system = "Colonia"
+```
 
 ---
 
@@ -74,7 +84,8 @@ python make_shortcut.py
 ```
 
 This creates `%USERPROFILE%\Desktop\ED Tracker.lnk` pointing to
-`pythonw.exe tracker.pyw` with a compass-rose icon and the correct working directory.
+`pythonw.exe tracker.pyw` with a compass-rose icon and the correct working
+directory.
 
 ---
 
@@ -83,7 +94,7 @@ This creates `%USERPROFILE%\Desktop\ED Tracker.lnk` pointing to
 ### Session start
 
 Double-click the Desktop shortcut (or run `pythonw tracker.pyw`).
-A compass-rose icon appears in the system tray.  The tracker immediately:
+A compass-rose icon appears in the system tray. The tracker immediately:
 
 1. Backfills all journal files from the `expedition_start_timestamp` cutoff.
 2. Starts live-tailing the active journal file.
@@ -102,7 +113,7 @@ A compass-rose icon appears in the system tray.  The tracker immediately:
 
 ### Session end
 
-Right-click → **Stop & exit**.  Never just kill the process — this ensures the
+Right-click → **Stop & exit**. Never just kill the process — this ensures the
 DB is cleanly closed and no partial writes are left.
 
 ---
@@ -112,34 +123,21 @@ DB is cleanly closed and no partial writes are left.
 | Trigger | Effect |
 |---|---|
 | Expedition start timestamp | Leg 1 opens automatically |
-| FSDJump to an **unvisited** Galactic Six Points waypoint | Current leg closes (named after that waypoint), next leg opens |
-| FSDJump to `Parrot's Head Sector EL-Y d70` | Final leg closes, expedition marked **complete** |
+| FSDJump to an **unvisited** expedition waypoint | Current leg closes (named after that waypoint), next leg opens |
+| FSDJump to `expedition_end_system` | Final leg closes, expedition marked **complete** |
 | Manual "Close current leg & export now" | Closes active leg with an ordinal name, opens the next |
 
 **Waypoints are unordered** — visit them in any sequence.  
 **Revisiting** a waypoint you've already reached does nothing.  
 **Carrier jumps** are tracked separately and never trigger a leg change.
 
-### The Galactic Six Points
-
-| Label | System |
-|---|---|
-| Nadir | HD 6428 |
-| Zenith | HIP 58832 |
-| West | Sphiesi HX-L d7-0 |
-| East | Ood Fleau ZJ-I d9-0 |
-| South | Lyed YJ-I d9-0 |
-| North | Oevasy SG-Y d0 |
-
-Final destination: **Parrot's Head Sector EL-Y d70**
-
 ---
 
 ## Editing waypoints
 
-Open `config.toml` and edit the `[[waypoints]]` blocks.  System names are
-matched **case-insensitively** against `FSDJump.StarSystem`, so capitalization
-doesn't matter.  Restart the tracker for changes to take effect.
+Open `config.toml` and edit the `[[waypoints]]` blocks. System names are
+matched **case-insensitively** against `FSDJump.StarSystem`, so capitalisation
+doesn't matter. Restart the tracker for changes to take effect.
 
 ---
 
@@ -158,23 +156,27 @@ Press Ctrl-C to stop cleanly.
 
 ## Validation
 
-The validation system has two layers that require **no manual editing** as the expedition grows.
+The validation system has two layers that require **no manual editing** as the
+expedition grows.
 
 ### Invariants
 
-Always-true structural assertions computed fresh from the current journals every run.
-Never need updating.  Examples:
+Always-true structural assertions computed fresh from the current journals
+every run. Examples:
 - No event has a timestamp before the expedition cutoff.
 - `systems_visited <= commander_jumps`
 - `distinct_bodies_scanned <= raw_scan_events` (dedup ≤ raw)
 - `first_discovered ≤ bodies_scanned`
-- **Anchor**: exactly 126 FSDJumps from the cutoff to the first arrival at Phloinn HC-J d10-1.
 
 ### Snapshot baseline (`validation_baseline.json`)
 
 A regenerable JSON file that captures current cumulative metrics.
-`--validate` checks that every metric is **≥ the baseline** — a decrease is a real
-regression.  Growth is expected and always passes.
+`--validate` checks that every metric is **≥ the baseline** — a decrease is a
+real regression. Growth is expected and always passes.
+
+`validation_baseline.json` is excluded from the repository (it is personal to
+each commander's expedition). Generate yours with `--snapshot` after your first
+session.
 
 ### Workflow after each play session
 
@@ -204,11 +206,7 @@ python tracker.pyw --validate
   [PASS] systems_visited <= commander_jumps
   [PASS] bodies_scanned: distinct <= raw
   ...
-  [PASS] Anchor: 126 FSDJumps to first arrival at Phloinn HC-J d10-1
-  [PASS] Rare finds: jumponium rule (all bodies) >= 66
-  [PASS] Rare finds: geo signal counts are only 2 or 3
-  [PASS] Rare finds: NSP alert count == 0 on current journals (UNVALIDATED rule)
-  All 14 invariants passed.
+  All 11 invariants passed.
 
 === Baseline Comparison ===
   [OK]   commander_jumps   baseline=215  current=220  (+5)
@@ -219,7 +217,7 @@ python tracker.pyw --validate
 PASSED.
 ```
 
-Exit code 0 = all checks pass.  Exit code 1 = invariant failure or metric regression.
+Exit code 0 = all checks pass. Exit code 1 = invariant failure or metric regression.
 
 ### Running as pytest
 
@@ -227,8 +225,8 @@ Exit code 0 = all checks pass.  Exit code 1 = invariant failure or metric regres
 pytest tests/test_validate.py -v
 ```
 
-Skipped automatically when journal files are not present.  The `expedition` fixture
-is module-scoped so journals are ingested only once for the full class.
+Skipped automatically when journal files are not present. The `expedition`
+fixture is module-scoped so journals are ingested only once for the full class.
 
 ---
 
@@ -238,16 +236,16 @@ Each leg export lands in `output/` (configurable in `config.toml`):
 
 ```
 output/
-  Leg01_Nadir_2026-06-03.xlsx
-  Leg01_Nadir_2026-06-03_systems.csv
-  Leg01_Nadir_2026-06-03_bodies.csv
-  Leg01_Nadir_2026-06-03_terraformable.csv   ← terraformable + ELW/WW/AW
-  Leg01_Nadir_2026-06-03_body_classes.csv    ← per-class count breakdown
-  Leg01_Nadir_2026-06-03_organics.csv
-  Leg01_Nadir_2026-06-03_codex.csv
-  Leg01_Nadir_2026-06-03_rare_finds.csv  ← notable first discoveries
-  Leg01_Nadir_2026-06-03_sales.csv
-  Leg02_Zenith_2026-06-05.xlsx
+  Leg01_Outpost_Alpha_2025-03-01.xlsx
+  Leg01_Outpost_Alpha_2025-03-01_systems.csv
+  Leg01_Outpost_Alpha_2025-03-01_bodies.csv
+  Leg01_Outpost_Alpha_2025-03-01_terraformable.csv   ← terraformable + ELW/WW/AW
+  Leg01_Outpost_Alpha_2025-03-01_body_classes.csv    ← per-class count breakdown
+  Leg01_Outpost_Alpha_2025-03-01_organics.csv
+  Leg01_Outpost_Alpha_2025-03-01_codex.csv
+  Leg01_Outpost_Alpha_2025-03-01_rare_finds.csv      ← notable first discoveries
+  Leg01_Outpost_Alpha_2025-03-01_sales.csv
+  Leg02_Outpost_Beta_2025-03-08.xlsx
   ...
   master_rollup.xlsx         ← regenerated on every leg close
 ```
@@ -273,16 +271,15 @@ a whole-expedition summary sheet.
 
 ## Rare / notable first-discovery detector
 
-The tracker evaluates every body scan against a configurable ruleset and
-flags structurally notable objects.  Results appear in a **Rare Finds** sheet
-in each per-leg xlsx, a matching `.csv`, and a rollup breakdown in
-`master_rollup.xlsx`.
+The tracker evaluates every body scan against a configurable ruleset and flags
+structurally notable objects. Results appear in a **Rare Finds** sheet in each
+per-leg xlsx, a matching `.csv`, and a rollup breakdown in `master_rollup.xlsx`.
 
 ### Design note — why not edastro's GEC "rare" list?
 
 edastro's GEC "rare" catalogue lists already-discovered community POIs.
 You cannot be the **first discoverer** of something already on that list, so
-it is the wrong source for this feature.  Rarity here is **structural**: it is
+it is the wrong source for this feature. Rarity here is **structural**: it is
 computed deterministically from journal fields (`Scan`, `FSSBodySignals`),
 not by matching external instances.
 
@@ -304,20 +301,13 @@ and records the WasDiscovered/WasMapped/WasFootFalled flags alongside.
 | 8 | `high_gravity` | Landable body with SurfaceGravity > `high_gravity_g` × 9.80665 m/s² (default 3 g) |
 | 9 | `fast_rotator` | `|RotationPeriod|` < `fast_rotator_hours` × 3600 s (default 3 h), excluding tidal-lock |
 | 10 | `ggg_candidate` | Gas giant in `ggg_planet_classes` with non-empty `AtmosphereComposition` — **best-effort heuristic, verify visually; will have false positives** |
-| 11 | `nsp_alert` | ⚠️ **UNVALIDATED** — system-level alert for Notable Stellar Phenomena via CodexEntry category `$Codex_Category_StellarPhenomena;` or non-mundane `FSSSignalDiscovered` signal. Zero NSP events exist in the current journals; rule produces 0 matches today. Validate on the next live NSP encounter. |
+| 11 | `nsp_alert` | System-level alert for Notable Stellar Phenomena via CodexEntry category or non-mundane `FSSSignalDiscovered` signal. |
 
 ### Jumponium set (configurable)
 
 `Carbon`, `Vanadium`, `Germanium`, `Arsenic`, `Niobium`, `Yttrium`, `Polonium`.
-Materials are matched case-insensitively against the journal `Name_Localised` field.
-The `trigger_details` column records the count and names found (e.g., `jumponium: 5 — arsenic,carbon,germanium,niobium,yttrium`).
-
-### Data joins
-
-- **Materials** and **Volcanism** come from the `Scan` event directly.
-- **Geological signal count** comes from `FSSBodySignals` events (stored in the `body_signals` table),
-  matched by `(system, body_name)`.  The rarity pass runs **after** all events are ingested
-  so the geo count is always available regardless of event ordering in the journal.
+Materials are matched case-insensitively against the journal `Name_Localised`
+field. The `trigger_details` column records the count and names found.
 
 ### Configurable thresholds (all in `[rarity]` of `config.toml`)
 
@@ -337,29 +327,30 @@ The `trigger_details` column records the count and names found (e.g., `jumponium
 
 ## Parsing quirks
 
-- **Cutoff filter**: every event with `timestamp < 2026-06-03T00:39:41Z` is silently
-  discarded.  This excludes the 1–2 June shakedown loop (~21 hops) AND the carrier
-  moves before the expedition proper.
+- **Cutoff filter**: every event with `timestamp < expedition_start_timestamp`
+  is silently discarded. Set this to the timestamp of your first expedition jump
+  to exclude pre-departure activity in the same journal directory.
 
-- **CarrierJump vs FSDJump**: `CarrierJump` events go into a separate table and are
-  excluded from jump/distance totals.  The carrier can move independently; only
-  commander FSD jumps count.
+- **CarrierJump vs FSDJump**: `CarrierJump` events go into a separate table and
+  are excluded from jump/distance totals. The carrier can move independently;
+  only commander FSD jumps count.
 
-- **Organic scans — 3 stages**: `ScanOrganic` fires for `Log` (approach), `Sample`
-  (first sample), and `Analyse` (complete).  All 3 rows are stored.  The "distinct
-  organic variants" metric counts only stage-3 (Analyse) rows with a non-null variant.
+- **Organic scans — 3 stages**: `ScanOrganic` fires for `Log` (approach),
+  `Sample` (first sample), and `Analyse` (complete). All 3 rows are stored.
+  The "distinct organic variants" metric counts only stage-3 (Analyse) rows
+  with a non-null variant.
 
-- **Carto sales — scan-vs-sale timing**: `MultiSellExplorationData` fires when you
-  sell at a station.  Credits are attributed to the leg active *at sale time*, not
-  when the systems were scanned.
+- **Carto sales — scan-vs-sale timing**: `MultiSellExplorationData` fires when
+  you sell at a station. Credits are attributed to the leg active *at sale
+  time*, not when the systems were scanned.
 
-- **Idempotent ingestion**: every event is hashed (SHA-256 of normalised JSON) and
-  stored in `events_raw` with a UNIQUE constraint.  Reprocessing the same file is
-  safe.  Byte offsets are also tracked per file so backfill skips already-processed
-  content on restart.
+- **Idempotent ingestion**: every event is hashed (SHA-256 of normalised JSON)
+  and stored in `events_raw` with a UNIQUE constraint. Reprocessing the same
+  file is safe. Byte offsets are also tracked per file so backfill skips
+  already-processed content on restart.
 
-- **Continued journals**: when a journal file reaches ~15 MB the game creates a new
-  file and emits a `Continued` event.  The tracker handles this naturally by
+- **Continued journals**: when a journal file reaches ~15 MB the game creates a
+  new file and emits a `Continued` event. The tracker handles this naturally by
   processing all files in chronological order with hash deduplication.
 
 ---
@@ -384,3 +375,49 @@ journal files needed.
 | Waypoint not auto-closing | Confirm exact `StarSystem` string in-game; update `config.toml` |
 | `tomllib` import error | You're running Python < 3.11; upgrade or `pip install tomli` |
 | Shortcut won't launch | Re-run `make_shortcut.py`; check pythonw.exe path in the output |
+
+---
+
+## Example: Galactic Six Points Expedition
+
+The following documents the expedition this tracker was originally built for,
+as a concrete illustration of how the tool is used in practice.
+
+### Background
+
+Elite Dangerous is a space-flight simulator built around a full-scale, 1:1
+recreation of our Milky Way galaxy: roughly 400 billion star systems, the
+overwhelming majority of which no human player has ever visited. One of the
+game's core pursuits is exploration — flying out into uncharted space, scanning
+the stars, planets, moons, and lifeforms you find, and being the first
+commander to put your name on a new discovery.
+
+Exploration in Elite Dangerous is part science expedition, part personal
+odyssey. The science is real: a commander dropping into an untouched system is
+the first to chart its stars, measure the mass and chemistry of its worlds, and
+document the lifeforms found on them — and your name stays attached to every
+body you discover, a permanent entry in humanity's shared map of the galaxy.
+The odyssey is the rest of it — weeks alone in the dark, tens of thousands of
+light-years from another soul, navigating star to star for the singular thrill
+of arriving somewhere no one has ever been.
+
+### The expedition
+
+The Galactic Six Points Expedition is a long-haul voyage organised around six
+destination systems — one for each direction a starship can travel in the
+galaxy: North, South, East, West, Zenith (up), and Nadir (down). This is not a
+quick trip: weeks or months of game time, the survey of thousands of star
+systems, and several hundreds of thousands of light-years of travel.
+
+### The Galactic Six Points waypoints
+
+| Label | System |
+|---|---|
+| Nadir | HD 6428 |
+| Zenith | HIP 58832 |
+| West | Sphiesi HX-L d7-0 |
+| East | Ood Fleau ZJ-I d9-0 |
+| South | Lyed YJ-I d9-0 |
+| North | Oevasy SG-Y d0 |
+
+Final destination: **Parrot's Head Sector EL-Y d70**

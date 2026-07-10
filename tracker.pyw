@@ -1,5 +1,5 @@
 """
-Elite Dangerous Expedition Tracker -- "6 Compass Points"
+Elite Dangerous Expedition Tracker
 
 Entry point.  Run via:
   pythonw.exe tracker.pyw            # system-tray mode (no console)
@@ -110,7 +110,7 @@ def _collect_stats(db, cfg: dict | None = None) -> dict[str, Any]:
         "exobio_earnings":            s["exobio_earnings"],
         # Rare finds (first-discoveries only, as stored in rare_finds table)
         "rare_finds_total":           db.count_all_rare_finds(),
-        # Jumponium across ALL scanned bodies (for baseline >= 66 assertion)
+        # Jumponium across ALL scanned bodies (flag_only_first_discoveries overridden)
         "rare_finds_jumponium_all":   all_matches.get("jumponium", 0),
         "rare_finds_nsp":             all_matches.get("nsp_alert", 0),
     }
@@ -281,14 +281,6 @@ def _check_geo_signal_max(db) -> tuple[bool, str]:
     return max_val <= 3, f"max geo signals = {max_val} (expected <= 3)"
 
 
-def _check_anchor(db) -> tuple[bool, str]:
-    n = db.count_jumps_to_first_arrival("Phloinn HC-J d10-1")
-    if n == -1:
-        return True, "not yet reached (expedition in progress)"
-    if n == 126:
-        return True, f"{n} == 126"
-    return False, f"got {n}, expected 126"
-
 # Each entry: (description, lambda(db, cfg, stats) -> (ok: bool, detail: str))
 _INVARIANTS: list[tuple[str, Any]] = [
     (
@@ -357,26 +349,8 @@ _INVARIANTS: list[tuple[str, Any]] = [
         ),
     ),
     (
-        "Anchor: 126 FSDJumps to first arrival at Phloinn HC-J d10-1",
-        lambda db, cfg, s: _check_anchor(db),
-    ),
-    (
-        "Rare finds: jumponium rule (all bodies) >= 66",
-        lambda db, cfg, s: (
-            s.get("rare_finds_jumponium_all", 0) >= 66,
-            f"jumponium_all={s.get('rare_finds_jumponium_all', 0)}",
-        ),
-    ),
-    (
         "Rare finds: geo signal counts are only 2 or 3",
         lambda db, cfg, s: _check_geo_signal_max(db),
-    ),
-    (
-        "Rare finds: NSP alert count == 0 on current journals (UNVALIDATED rule)",
-        lambda db, cfg, s: (
-            s.get("rare_finds_nsp", 0) == 0,
-            f"nsp_count={s.get('rare_finds_nsp', 0)} (expected 0 — no NSP events in current data)",
-        ),
     ),
 ]
 
@@ -425,7 +399,7 @@ def _check_baseline(current: dict, path: Path) -> list[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Elite Dangerous Expedition Tracker -- 6 Compass Points"
+        description="Elite Dangerous Expedition Tracker"
     )
     ap.add_argument("--cli",      action="store_true", help="Run headless (console/log output)")
     ap.add_argument("--validate", action="store_true", help="Assert invariants + check baseline")

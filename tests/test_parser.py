@@ -13,7 +13,7 @@ from tests.conftest import make_jump, make_scan, CUTOFF
 # ── Cutoff filter ──────────────────────────────────────────────────────────────
 
 def test_event_before_cutoff_is_ignored(parser, db):
-    line = make_jump(ts="2026-06-02T23:59:59Z", star_system="Pre-Cutoff System")
+    line = make_jump(ts="2024-12-31T23:59:59Z", star_system="Pre-Cutoff System")
     result = parser.process_line(line)
     assert not result
     # No jumps should be in the DB

@@ -20,33 +20,35 @@ from engine.config import load as load_cfg
 from engine.legs   import LegManager
 from engine.parser import EventParser
 
-# Expedition cutoff used across all tests
-CUTOFF = "2026-06-03T00:39:41Z"
+# Cutoff timestamp used across unit tests — well before any synthetic event timestamps.
+CUTOFF = "2025-01-01T00:00:00Z"
 
-# Minimal config dict that the engine modules accept (no real files needed)
+# Minimal config dict that the engine modules accept (no real files needed).
+# Waypoint systems below are example values used by test_legs.py to exercise
+# waypoint logic; they are not tied to any real expedition.
 _BASE_CFG = {
     "expedition_start_timestamp": CUTOFF,
     "expedition_start_dt": datetime.fromisoformat(CUTOFF.replace("Z", "+00:00")),
-    "expedition_start_system": "Dryaa Phoe HI-Z d1-0",
-    "expedition_start_system_norm": "dryaa phoe hi-z d1-0",
+    "expedition_start_system": "Sol",
+    "expedition_start_system_norm": "sol",
     "expedition_end_system": "Parrot's Head Sector EL-Y d70",
     "expedition_end_system_norm": "parrot's head sector el-y d70",
-    "commander": "AristonX",
+    "commander": "ExampleCMDR",
     "waypoints": [
-        {"label": "Nadir",  "system": "HD 6428",           "system_norm": "hd 6428"},
-        {"label": "Zenith", "system": "HIP 58832",          "system_norm": "hip 58832"},
-        {"label": "West",   "system": "Sphiesi HX-L d7-0", "system_norm": "sphiesi hx-l d7-0"},
-        {"label": "East",   "system": "Ood Fleau ZJ-I d9-0","system_norm": "ood fleau zj-i d9-0"},
-        {"label": "South",  "system": "Lyed YJ-I d9-0",    "system_norm": "lyed yj-i d9-0"},
-        {"label": "North",  "system": "Oevasy SG-Y d0",    "system_norm": "oevasy sg-y d0"},
+        {"label": "Nadir",  "system": "HD 6428",            "system_norm": "hd 6428"},
+        {"label": "Zenith", "system": "HIP 58832",           "system_norm": "hip 58832"},
+        {"label": "West",   "system": "Sphiesi HX-L d7-0",  "system_norm": "sphiesi hx-l d7-0"},
+        {"label": "East",   "system": "Ood Fleau ZJ-I d9-0", "system_norm": "ood fleau zj-i d9-0"},
+        {"label": "South",  "system": "Lyed YJ-I d9-0",     "system_norm": "lyed yj-i d9-0"},
+        {"label": "North",  "system": "Oevasy SG-Y d0",     "system_norm": "oevasy sg-y d0"},
     ],
     "waypoint_map": {
-        "hd 6428":            "Nadir",
-        "hip 58832":          "Zenith",
-        "sphiesi hx-l d7-0":  "West",
-        "ood fleau zj-i d9-0":"East",
-        "lyed yj-i d9-0":     "South",
-        "oevasy sg-y d0":     "North",
+        "hd 6428":             "Nadir",
+        "hip 58832":           "Zenith",
+        "sphiesi hx-l d7-0":   "West",
+        "ood fleau zj-i d9-0": "East",
+        "lyed yj-i d9-0":      "South",
+        "oevasy sg-y d0":      "North",
     },
 }
 
