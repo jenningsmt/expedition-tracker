@@ -723,6 +723,11 @@ class Database:
                 f"SELECT COUNT(*) FROM bodies {where} {and_} {no_bc} "
                 f"AND terraform_state IS NOT NULL AND terraform_state != ''", p,
             ).fetchone()
+            hmc_terra = self._exec(
+                f"SELECT COUNT(*) FROM bodies {where} {and_} "
+                f"body_class='High metal content body' "
+                f"AND terraform_state IS NOT NULL AND terraform_state != ''", p,
+            ).fetchone()
             organics = self._exec(
                 f"""SELECT COUNT(DISTINCT variant) FROM organic_scans
                     {where} {and_} scan_stage=3 AND variant IS NOT NULL""",
@@ -752,7 +757,8 @@ class Database:
             "bodies_scanned":    bodies[0],      # DISTINCT (system, body_id)
             "first_discovered":  first_disc[0],  # DISTINCT
             "bodies_mapped":     surface_map[0], # DISTINCT
-            "terraformable_count": terra[0],     # DISTINCT, any class
+            "terraformable_count":   terra[0],     # DISTINCT, any class
+            "hmc_terraformable":     hmc_terra[0], # DISTINCT HMC with non-empty TerraformState
             "organic_variants":  organics[0],    # DISTINCT variant strings at stage 3
             "new_codex":         codex_new[0],
             "carto_sales_count": carto_sum[0],
