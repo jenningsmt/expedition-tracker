@@ -41,7 +41,7 @@ def _write_icon() -> None:
     draw.ellipse([c - 3, c - 3, c + 3, c + 3], fill="#FFF176")
 
     img.save(str(ICON), format="ICO", sizes=[(64, 64), (32, 32), (16, 16)])
-    print(f"Icon saved → {ICON}")
+    print(f"Icon saved -> {ICON}")
 
 
 def _find_pythonw() -> str:
@@ -90,7 +90,7 @@ Write-Output 'Shortcut created at {lnk}'
 def main() -> None:
     _write_icon()
     pythonw = _find_pythonw()
-    print(f"pythonw.exe → {pythonw}")
+    print(f"pythonw.exe -> {pythonw}")
     _create_shortcut(pythonw)
     print("Done.  You can now launch the tracker from the Desktop shortcut.")
 
