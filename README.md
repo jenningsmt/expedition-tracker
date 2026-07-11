@@ -117,7 +117,8 @@ A compass-rose icon appears in the system tray. The tracker immediately:
 | Menu item | What it does |
 |---|---|
 | **Status** | Shows current leg stats as a balloon notification |
-| **Close current leg & export now** | Manually closes the active leg, exports it to xlsx + CSVs, and opens a new leg |
+| **Export snapshot** | Exports the current in-progress leg to xlsx + CSVs without closing it, then opens the output folder. Filename is suffixed with `_snapshot_<timestamp>` so it is distinguishable from the final export. |
+| **Close current leg & export now** | Closes the active leg, exports it to xlsx + CSVs, and opens a new leg |
 | **Stop & exit** | Flushes the DB, stops the watcher, removes the tray icon |
 
 ### Session end

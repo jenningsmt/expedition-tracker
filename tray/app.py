@@ -99,6 +99,7 @@ class TrackerTray:
             title="ED Expedition Tracker",
             menu=Menu(
                 Item("Status",                self._show_status),
+                Item("Export snapshot",       self._export_snapshot),
                 Item("Close leg & export now", self._manual_close),
                 Menu.SEPARATOR,
                 Item("Configure expedition…", self._open_config),
@@ -145,6 +146,35 @@ class TrackerTray:
             except Exception:
                 pass
         self._update_tooltip()
+
+    def _export_snapshot(self, icon, item) -> None:
+        leg = self._db.get_active_leg()
+        if leg is None:
+            try:
+                icon.notify("No active leg — nothing to snapshot.", title="ED Tracker")
+            except Exception:
+                pass
+            return
+
+        from engine.rarity import run_rarity_pass
+        run_rarity_pass(self._db, self._cfg.get("rarity", {}))
+
+        ts     = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+        suffix = f"_snapshot_{ts}"
+        out    = Path(self._cfg["output_dir"])
+        try:
+            xlsx_path = export_leg(leg["leg_id"], self._db, out, suffix=suffix)
+            export_master_rollup(self._db, out)
+            msg = f"Snapshot saved: {xlsx_path.name}"
+            log.info(msg)
+            try:
+                icon.notify(msg, title="ED Tracker")
+            except Exception:
+                pass
+            import os
+            os.startfile(out)
+        except Exception:
+            log.exception("Snapshot export failed.")
 
     def _open_config(self, icon, item) -> None:
         config_script = Path(__file__).parent.parent / "ui" / "config_window.py"

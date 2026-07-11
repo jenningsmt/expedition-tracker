@@ -94,13 +94,18 @@ def _add_sheet(wb, name: str, headers: list[str], rows: list[list]) -> None:
 
 # ── Main entry points ──────────────────────────────────────────────────────────
 
-def export_leg(leg_id: int, db: Database, output_dir: Path) -> Path:
-    """Export one leg to xlsx + CSVs.  Returns the xlsx path."""
+def export_leg(leg_id: int, db: Database, output_dir: Path,
+               suffix: str = "") -> Path:
+    """Export one leg to xlsx + CSVs.  Returns the xlsx path.
+
+    Pass suffix (e.g. '_snapshot_20260603T014500') to distinguish an
+    on-demand snapshot from the final waypoint-close export.
+    """
     leg = db.get_leg(leg_id)
     if leg is None:
         raise ValueError(f"Leg {leg_id} not found in DB.")
 
-    slug   = _leg_slug(leg)
+    slug   = _leg_slug(leg) + suffix
     xlsx_p = output_dir / f"{slug}.xlsx"
     wb     = openpyxl.Workbook()
     wb.remove(wb.active)
