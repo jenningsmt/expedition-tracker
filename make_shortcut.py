@@ -59,8 +59,23 @@ def _find_pythonw() -> str:
     )
 
 
+def _get_desktop() -> Path:
+    """Return the real Desktop path, respecting OneDrive / shell folder redirection."""
+    try:
+        import winreg
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",
+        )
+        val, _ = winreg.QueryValueEx(key, "Desktop")
+        winreg.CloseKey(key)
+        return Path(os.path.expandvars(val))
+    except Exception:
+        return Path(os.path.expandvars("%USERPROFILE%")) / "Desktop"
+
+
 def _create_shortcut(pythonw: str) -> None:
-    desktop = Path(os.path.expandvars("%USERPROFILE%")) / "Desktop"
+    desktop = _get_desktop()
     lnk     = desktop / "ED Tracker.lnk"
     icon_str = str(ICON) if ICON.exists() else ""
 
