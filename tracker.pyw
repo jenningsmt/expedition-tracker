@@ -397,6 +397,46 @@ def _check_baseline(current: dict, path: Path) -> list[str]:
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
+def _run_reset() -> None:
+    """Interactively wipe all expedition data."""
+    from engine.reset import reset_expedition_data
+
+    print()
+    print("This will permanently delete:")
+    print("  • tracker.db       — all jump, scan, and organic data")
+    print("  • output/          — all exported xlsx and csv files")
+    print("  • validation_baseline.json  — if present")
+    print()
+    print("config.toml will NOT be changed.")
+    print()
+    answer = input("Type YES to confirm reset: ").strip()
+    if answer != "YES":
+        print()
+        print("Reset cancelled.")
+        return
+
+    try:
+        removed = reset_expedition_data(ROOT)
+    except OSError as exc:
+        print()
+        print(f"Reset failed: {exc}")
+        print("If the tracker is running, stop it first (tray → Stop & exit).")
+        sys.exit(1)
+
+    print()
+    if removed["db"]:
+        print("  Deleted tracker.db")
+    if removed["exports"]:
+        print(f"  Deleted {removed['exports']} file(s) from output/")
+    if removed["baseline"]:
+        print("  Deleted validation_baseline.json")
+    if not any(removed.values()):
+        print("  Nothing to delete — already clean.")
+    print()
+    print("Reset complete. Configure a new expedition in config.toml,")
+    print("then launch tracker.pyw to start fresh.")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description="Elite Dangerous Expedition Tracker"
@@ -404,12 +444,17 @@ def main() -> None:
     ap.add_argument("--cli",      action="store_true", help="Run headless (console/log output)")
     ap.add_argument("--validate", action="store_true", help="Assert invariants + check baseline")
     ap.add_argument("--snapshot", action="store_true", help="Regenerate validation_baseline.json")
+    ap.add_argument("--reset",    action="store_true", help="Delete all expedition data (keeps config.toml)")
     ap.add_argument("--config",   default=str(ROOT / "config.toml"), help="Path to config.toml")
     ap.add_argument("--verbose",  action="store_true", help="Debug-level logging")
     args = ap.parse_args()
 
-    to_console = args.cli or args.validate or args.snapshot
+    to_console = args.cli or args.validate or args.snapshot or args.reset
     _setup_logging(verbose=args.verbose, to_console=to_console)
+
+    if args.reset:
+        _run_reset()
+        return
 
     from engine.config import load as load_cfg
     cfg = load_cfg(Path(args.config))

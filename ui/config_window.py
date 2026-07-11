@@ -135,6 +135,7 @@ class ConfigWindow:
         self._build_commander_section(outer).pack(fill=tk.X, **pad)
         self._build_route_section(outer).pack(fill=tk.X, **pad)
         self._build_waypoints_section(outer).pack(fill=tk.BOTH, expand=True, **pad)
+        self._build_reset_section(outer).pack(fill=tk.X, **pad)
         self._build_buttons(outer).pack(fill=tk.X, padx=12, pady=(0, 12))
 
     def _build_commander_section(self, parent: ttk.Frame) -> ttk.LabelFrame:
@@ -212,6 +213,22 @@ class ConfigWindow:
         ttk.Button(lf, text="+ Add waypoint",
                    command=self._add_waypoint_row).pack(anchor=tk.W, pady=(6, 0))
 
+        return lf
+
+    def _build_reset_section(self, parent: ttk.Frame) -> ttk.LabelFrame:
+        lf = ttk.LabelFrame(parent, text="Reset expedition data", padding=8)
+        ttk.Label(
+            lf,
+            text=(
+                "Deletes tracker.db, all exports in output/, and the validation\n"
+                "baseline. config.toml is kept so your route definition is preserved."
+            ),
+            foreground="gray",
+            justify=tk.LEFT,
+        ).pack(side=tk.LEFT, padx=(0, 16))
+        ttk.Button(
+            lf, text="Reset data…", command=self._confirm_reset
+        ).pack(side=tk.RIGHT, anchor=tk.E)
         return lf
 
     def _build_buttons(self, parent: ttk.Frame) -> ttk.Frame:
@@ -347,6 +364,48 @@ class ConfigWindow:
             parent=self.root,
         )
         self.root.destroy()
+
+    def _confirm_reset(self) -> None:
+        confirmed = messagebox.askokcancel(
+            "Reset expedition data",
+            "This will permanently delete:\n\n"
+            "  • tracker.db  (all expedition data)\n"
+            "  • output/     (all exported files)\n"
+            "  • validation_baseline.json\n\n"
+            "config.toml will NOT be changed.\n\n"
+            "Stop the tracker (tray → Stop & exit) before resetting.\n\n"
+            "Continue?",
+            parent=self.root,
+        )
+        if not confirmed:
+            return
+
+        from engine.reset import reset_expedition_data
+        try:
+            removed = reset_expedition_data(ROOT)
+        except OSError as exc:
+            messagebox.showerror(
+                "Reset failed",
+                f"{exc}\n\nIf the tracker is running, stop it first.",
+                parent=self.root,
+            )
+            return
+
+        parts = []
+        if removed["db"]:
+            parts.append("tracker.db deleted")
+        if removed["exports"]:
+            parts.append(f"{removed['exports']} export file(s) deleted")
+        if removed["baseline"]:
+            parts.append("validation_baseline.json deleted")
+
+        msg = "\n".join(f"  • {p}" for p in parts) if parts else "  Nothing to delete."
+        messagebox.showinfo(
+            "Reset complete",
+            f"Expedition data cleared:\n\n{msg}\n\n"
+            "Update config.toml if needed, then launch the tracker to start fresh.",
+            parent=self.root,
+        )
 
     def _validate(self) -> list[str]:
         errors: list[str] = []

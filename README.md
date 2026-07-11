@@ -30,16 +30,25 @@ waypoint.
 
 ## Install
 
-1. **Python 3.11+** required (uses `tomllib` from stdlib).
+1. **Python 3.11+** required — download from [python.org](https://python.org) if
+   needed. Tick **"Add Python to PATH"** during install.
 
-2. Clone / copy this folder anywhere — e.g. `C:\Tools\expedition-tracker\`.
-
-3. Install dependencies:
+2. Clone or download this repository somewhere permanent (the tracker writes
+   `tracker.db` and `output/` relative to its own folder):
    ```
-   pip install -r requirements.txt
+   git clone https://github.com/jenningsmt/expedition-tracker.git C:\Tools\expedition-tracker
+   cd C:\Tools\expedition-tracker
    ```
 
-4. Edit `config.toml` to define your expedition (see below).
+3. **Run the installer** — either double-click `install.bat` or:
+   ```
+   python install.py
+   ```
+   This checks your Python version, installs dependencies, creates the Desktop
+   shortcut, and opens the configuration window.
+
+4. In the configuration window, fill in your commander name, journal folder,
+   and expedition route, then click **Save**.
 
 ---
 
@@ -369,6 +378,43 @@ pytest tests/ -v --ignore=tests/test_validate.py
 
 The unit tests use in-memory databases and synthetic journal lines — no real
 journal files needed.
+
+---
+
+## Resetting / starting a new expedition
+
+When an expedition ends — or if you want to abandon one and start fresh —
+clear all accumulated data without touching your route configuration.
+
+**From the config window** (recommended):
+
+Open the configuration window (`python ui/config_window.py` or tray → Configure expedition…),
+scroll to the **Reset expedition data** section, and click **Reset data…**.
+A confirmation dialog lists exactly what will be deleted.
+
+**From the command line:**
+
+```
+python tracker.pyw --reset
+```
+
+Type `YES` at the prompt to confirm.
+
+**What is deleted:**
+
+| Item | Deleted? |
+|---|---|
+| `tracker.db` | Yes — all jump, scan, and organic data |
+| `output/` | Yes — all exported xlsx and csv files |
+| `validation_baseline.json` | Yes — if present |
+| `config.toml` | **No** — your expedition definition is preserved |
+| `tracker.log` | **No** |
+
+Stop the tracker (tray → **Stop & exit**) before resetting. The database
+cannot be deleted while the tracker process has it open.
+
+After resetting, update `config.toml` with your new expedition route if
+needed, then launch the tracker to start fresh.
 
 ---
 
