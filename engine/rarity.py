@@ -314,60 +314,45 @@ def count_rule_matches_all_bodies(db: "Database", rarity_cfg: dict) -> dict[str,
 
 def _check_nsp(db: "Database", rarity_cfg: dict) -> None:
     """
-    ⚠️  UNVALIDATED — zero NSP events in the current journal set.
-    Check for Notable Stellar Phenomena via:
-      1. CodexEntry with Category == "$Codex_Category_StellarPhenomena;"
-      2. FSSSignalDiscovered with non-mundane SignalType
+    Check for Notable Stellar Phenomena via CodexEntry events where
+    NearestDestination starts with "$Fixed_Event_" — this is the journal
+    marker that a scan occurred inside an NSP cloud/ring.
 
-    Any match stores a system-level rare_find row with body_id=-1.
+    NSP entities (Gyre Trees, Lagrange Clouds, etc.) are filed under
+    $Codex_Category_Biology; not $Codex_Category_StellarPhenomena;, so
+    category is not a reliable discriminator.
+
+    Each entity gets body_id = -EntryID so multiple NSP species in the same
+    system produce separate rare_finds rows without colliding.
     """
-    mundane = {s.lower() for s in rarity_cfg.get("nsp_mundane_signal_types", [])}
-
-    # ── CodexEntry check ──────────────────────────────────────────────────────
     for (raw_json,) in db.get_events_raw_by_type("CodexEntry"):
         try:
             ev = json.loads(raw_json)
         except Exception:
             continue
-        cat = ev.get("Category", "")
-        if cat == "$Codex_Category_StellarPhenomena;":
-            system  = ev.get("System") or ev.get("StarSystem", "")
-            sys_addr = ev.get("SystemAddress")
-            leg_id  = db.get_system_leg_id(system)
-            name    = ev.get("Name_Localised") or ev.get("Name", "NSP CodexEntry")
-            db.upsert_rare_find(
-                system=system, system_address=sys_addr, body_id=-1,
-                body_name=name, body_class="NSP",
-                leg_id=leg_id,
-                matches=[RuleMatch(
-                    tag="nsp_alert",
-                    details=f"NSP codex entry: {name}",
-                    attrs={"source": "CodexEntry", "category": cat},
-                )],
-                was_discovered=0, was_mapped=1, was_footfalled=1,
-                distance_ls=None,
-            )
-
-    # ── FSSSignalDiscovered check ─────────────────────────────────────────────
-    for (raw_json,) in db.get_events_raw_by_type("FSSSignalDiscovered"):
-        try:
-            ev = json.loads(raw_json)
-        except Exception:
+        near_dest = ev.get("NearestDestination", "")
+        if not near_dest.startswith("$Fixed_Event_"):
             continue
-        sig_type = (ev.get("SignalType_Localised") or ev.get("SignalType") or "").strip()
-        if sig_type.lower() not in mundane and sig_type:
-            system   = ev.get("StarSystem", "")
-            sys_addr = ev.get("SystemAddress")
-            leg_id   = db.get_system_leg_id(system)
-            db.upsert_rare_find(
-                system=system, system_address=sys_addr, body_id=-1,
-                body_name=sig_type, body_class="NSP",
-                leg_id=leg_id,
-                matches=[RuleMatch(
-                    tag="nsp_alert",
-                    details=f"Non-mundane FSS signal: {sig_type}",
-                    attrs={"source": "FSSSignalDiscovered", "signal_type": sig_type},
-                )],
-                was_discovered=0, was_mapped=1, was_footfalled=1,
-                distance_ls=None,
-            )
+        system   = ev.get("System") or ev.get("StarSystem", "")
+        sys_addr = ev.get("SystemAddress")
+        leg_id   = db.get_system_leg_id(system)
+        name     = ev.get("Name_Localised") or ev.get("Name", "NSP")
+        entry_id = ev.get("EntryID", 0)
+        sub_cat  = ev.get("SubCategory_Localised", "")
+        db.upsert_rare_find(
+            system=system, system_address=sys_addr, body_id=-entry_id,
+            body_name=name, body_class="NSP",
+            leg_id=leg_id,
+            matches=[RuleMatch(
+                tag="nsp_alert",
+                details=f"NSP: {name}" + (f" ({sub_cat})" if sub_cat else ""),
+                attrs={
+                    "source":      "CodexEntry",
+                    "near_dest":   near_dest,
+                    "sub_category": sub_cat,
+                    "is_new_entry": ev.get("IsNewEntry", False),
+                },
+            )],
+            was_discovered=0, was_mapped=1, was_footfalled=1,
+            distance_ls=None,
+        )

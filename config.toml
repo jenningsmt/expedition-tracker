@@ -1,60 +1,52 @@
 # Elite Dangerous Expedition Tracker
 # Edit this file to define your expedition, then launch tracker.pyw.
 
-# ── Journal source ─────────────────────────────────────────────────────────────
-# Default is the standard ED Saved Games location on Windows.
-# Change this if your journals are in a non-standard location.
-journal_dir = 'C:\Users\YourName\Saved Games\Frontier Developments\Elite Dangerous'
+# ── Journal source ────────────────────────────────────────────────────────────
+journal_dir = 'C:/Users/jenni/Saved Games/Frontier Developments/Elite Dangerous'
 
-# ── Output & database ──────────────────────────────────────────────────────────
-# Paths relative to the script root, or use absolute paths.
+# ── Output & database ─────────────────────────────────────────────────────────
 output_dir = "output"
 db_path    = "tracker.db"
 
-# ── Commander ──────────────────────────────────────────────────────────────────
-commander = "YourCommanderName"
+# ── Commander ─────────────────────────────────────────────────────────────────
+commander = 'AristonX'
 
-# ── Expedition definition ──────────────────────────────────────────────────────
-# Set expedition_start_timestamp to the UTC timestamp of your first departure
-# jump.  Every journal event before this time is silently ignored — use it to
-# exclude pre-expedition shakedown flights or prior sessions in the same
-# journal directory.
-#
-# Find the exact timestamp: open your most recent journal file and look for the
-# first FSDJump event after you departed for the expedition.
-# Format: "YYYY-MM-DDTHH:MM:SSZ"
-expedition_start_timestamp = "2025-01-01T00:00:00Z"
+# ── Expedition definition ─────────────────────────────────────────────────────
+# Find expedition_start_timestamp in your journal: first FSDJump after
+# departure. Format: YYYY-MM-DDTHH:MM:SSZ (UTC). Events before this are
+# ignored, which excludes pre-departure flights in the same journal folder.
+expedition_start_timestamp = '2026-06-03T00:30:00Z'
 
-# The system you depart from.  Documentation only — not used for tracking logic.
-expedition_start_system = "Sol"
+# The system you depart from (documentation only, not used for tracking).
+expedition_start_system = 'Dryaa Phoe HI-Z d1-0'
 
-# Arriving at this system (case-insensitive) closes the final leg and marks
-# the expedition complete.  Set this to your planned final destination.
-expedition_end_system = "Sagittarius A*"
+# Arriving here closes the final leg and marks the expedition complete.
+expedition_end_system = 'HIP 58832'
 
-# ── Waypoints ──────────────────────────────────────────────────────────────────
-# Define one [[waypoints]] block per destination.  Order does NOT matter —
-# waypoints are visited in any sequence.
-#
-# When you FSD-jump AWAY from an unvisited waypoint system, the tracker
-# automatically closes the current leg (naming it after that waypoint's label)
-# and opens the next one.  Revisiting a waypoint you've already been to has
-# no effect.
-#
-# System names are matched case-insensitively against FSDJump.StarSystem.
-# Confirm the exact in-game system name before adding it here.
+# ── Waypoints ─────────────────────────────────────────────────────────────────
+# One [[waypoints]] block per destination. Visited in any order.
+# Jumping AWAY from an unvisited waypoint closes the current leg.
 
 [[waypoints]]
-label  = "Waypoint 1"
-system = "Beagle Point"
+label  = 'Waypoint 1'
+system = 'Lyed YJ-I d9-0'
 
 [[waypoints]]
-label  = "Waypoint 2"
-system = "Colonia"
+label  = 'Waypoint 2'
+system = 'Iorady JO-Z d13-0'
 
-# Add more [[waypoints]] blocks as needed for your expedition route.
+[[waypoints]]
+label  = 'Waypoint 3'
+system = 'Cyuefoo LC-D d12-0'
 
-# ── Rare / notable first-discovery detector ────────────────────────────────────
+[[waypoints]]
+label  = 'Waypoint 4'
+system = 'Plae Eur IC-D d12-0'
+
+[[waypoints]]
+label  = 'Waypoint 5'
+system = 'HD 6428'
+# ── Rare / notable first-discovery detector ──────────────────────────────────
 [rarity]
 # If true (default), only evaluate bodies where WasDiscovered == false.
 # Set to false to evaluate all scanned bodies regardless of prior discovery.
@@ -104,8 +96,10 @@ ggg_planet_classes = [
     "Helium gas giant"
 ]
 
-# NSP rule: FSSSignalDiscovered signal types to treat as mundane (not flagged).
-# Anything NOT on this list triggers the NSP alert.
+# NSP rule: FSSSignalDiscovered SignalType values to treat as mundane (not flagged).
+# NSP detection now uses CodexEntry (NearestDestination = "$Fixed_Event_*") which
+# captures named entities (Gyre Trees, Lagrange Clouds, etc.) with full context.
+# This list is a secondary filter for any non-CodexEntry Codex-type FSS signals.
 nsp_mundane_signal_types = [
     "Fleet Carrier",
     "Station",
@@ -119,6 +113,5 @@ nsp_mundane_signal_types = [
     "Combat Zone (High)",
     "Unidentified Signal Source",
     "Mission target",
-    "Megaship",
-    "Notable stellar phenomena"
+    "Megaship"
 ]
